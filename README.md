@@ -50,13 +50,13 @@ The key difference from prompt-based safety: **the AI can't override the binary.
 ```mermaid
 graph TB
     subgraph "❌ Text-based safety"
-        P["📝 System prompt:\n'Don't delete files'"] --> AI1["🤖 AI reads the rules"]
-        AI1 --> BYPASS["⚠️ Prompt injection\ncan override this"]
+        P["📝 System prompt:<br/>'Don't delete files'"] --> AI1["🤖 AI reads the rules"]
+        AI1 --> BYPASS["⚠️ Prompt injection<br/>can override this"]
     end
 
     subgraph "✅ SPFsmartGATE"
-        GATE["🔒 Compiled Rust binary\nRules are in the code"] --> AI2["🤖 AI has no choice"]
-        AI2 --> SAFE["✅ Dangerous actions\nare physically blocked"]
+        GATE["🔒 Compiled Rust binary<br/>Rules are in the code"] --> AI2["🤖 AI has no choice"]
+        AI2 --> SAFE["✅ Dangerous actions<br/>are physically blocked"]
     end
 
     style P fill:#E74C3C,stroke:#C0392B,color:#fff
@@ -85,11 +85,11 @@ Every AI action passes through **5 security checks** before it touches your syst
 ```mermaid
 graph TD
     REQ["🤖 AI wants to do something"] --> S1
-    S1["1️⃣ Rate Limit\nIs it going too fast?"] --> S2
-    S2["2️⃣ Complexity Score\nHow risky is this action?"] --> S3
-    S3["3️⃣ Validation\nAllowed path? Read the file first?"] --> S4
-    S4["4️⃣ Content Scan\nPasswords? Shell injection?"] --> S5
-    S5["5️⃣ Final Decision\nApprove or escalate"] --> OUT
+    S1["1️⃣ Rate Limit<br/>Is it going too fast?"] --> S2
+    S2["2️⃣ Complexity Score<br/>How risky is this action?"] --> S3
+    S3["3️⃣ Validation<br/>Allowed path? Read the file first?"] --> S4
+    S4["4️⃣ Content Scan<br/>Passwords? Shell injection?"] --> S5
+    S5["5️⃣ Final Decision<br/>Approve or escalate"] --> OUT
 
     OUT{"Result"}
     OUT -->|"✅ Safe"| EXEC["Action executes"]
@@ -127,12 +127,12 @@ graph TD
 graph TB
     subgraph "Your Computer"
         subgraph "SPFsmartGATE (the gate)"
-            MCP["📡 MCP Server\nSpeaks the standard\nAI tool protocol"]
-            GATE["🛡️ Security Pipeline\n5-stage check on\nevery action"]
-            DB["💾 6 Databases\nSession logs, config,\nagent memory"]
-            HOOKS["🪝 31 Hook Scripts\nMonitor and log\nthe full lifecycle"]
+            MCP["📡 MCP Server<br/>Speaks the standard<br/>AI tool protocol"]
+            GATE["🛡️ Security Pipeline<br/>5-stage check on<br/>every action"]
+            DB["💾 6 Databases<br/>Session logs, config,<br/>agent memory"]
+            HOOKS["🪝 31 Hook Scripts<br/>Monitor and log<br/>the full lifecycle"]
         end
-        CLI["🖥️ Your AI Assistant\n(Claude Code, etc.)"]
+        CLI["🖥️ Your AI Assistant<br/>(Claude Code, etc.)"]
         FS["📁 Your Files"]
         WEB["🌐 Internet"]
     end
