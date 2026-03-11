@@ -46,3 +46,19 @@ graph TD
 ## Deep dive
 
 See [Deployment Guide](../docs/deployment.md) for the full LIVE directory layout and LMDB size allocations.
+
+---
+
+## License
+
+**Free for personal use.** Commercial use requires a paid license.
+
+Licensed under the [PolyForm Noncommercial License 1.0.0](../LICENSE.md).
+See [COMMERCIAL_LICENSE.md](../COMMERCIAL_LICENSE.md) for business use, or email **joepcstone@gmail.com**.
+
+---
+
+<p align="center">
+  Copyright 2026 Joseph Stone. All Rights Reserved.<br/>
+  <em>SPFsmartGATE and the StoneCell Processing Formula (SPF) are proprietary intellectual property.</em>
+</p>

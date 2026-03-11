@@ -66,3 +66,19 @@ Screenshots from the Android/Termux deployment are in [screenshots/](screenshots
 - [Changelog](../CHANGELOG.md) — Version history
 - [License](../LICENSE.md) — PolyForm Noncommercial 1.0.0
 - [Commercial License](../COMMERCIAL_LICENSE.md) — Business use terms
+
+---
+
+## License
+
+**Free for personal use.** Commercial use requires a paid license.
+
+Licensed under the [PolyForm Noncommercial License 1.0.0](../LICENSE.md).
+See [COMMERCIAL_LICENSE.md](../COMMERCIAL_LICENSE.md) for business use, or email **joepcstone@gmail.com**.
+
+---
+
+<p align="center">
+  Copyright 2026 Joseph Stone. All Rights Reserved.<br/>
+  <em>SPFsmartGATE and the StoneCell Processing Formula (SPF) are proprietary intellectual property.</em>
+</p>
