@@ -163,7 +163,7 @@ jobs:
             ### Documentation
 
             - [README.md](README.md) — Overview and installation
-            - [SPFsmartGATEdevBIBLE](SPFsmartGATEdevBIBLE/) — Complete technical reference
+            - [Documentation](docs/) — Complete technical reference
             - [CHANGELOG.md](CHANGELOG.md) — What's new
             - [SECURITY.md](SECURITY.md) — Security policy
 
