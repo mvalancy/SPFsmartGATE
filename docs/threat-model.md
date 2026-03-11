@@ -68,6 +68,39 @@ The MCP protocol is model-agnostic — any AI agent that speaks MCP can call too
 
 - **Standard desktop development with frontier models** — if you're using GPT-4, Claude, or Gemini Pro through their official APIs with normal safety settings, the models themselves are the guardrail.
 
+- **Code-generation architectures (Lua, Python scripting, etc.)** — if the model generates code that a separate runtime executes, SPFsmartGATE has zero visibility into those actions. See below.
+
+## When SPFsmartGATE doesn't apply at all
+
+SPFsmartGATE gates **MCP tool calls** — the model says `tools/call spf_write` and the gate intercepts it. That's one specific architecture.
+
+A different, equally common architecture: the model **generates code** (Lua, Python, JavaScript, etc.) and a separate executor runs it. Game engines, scripting sandboxes, and many agent frameworks work this way. In that pattern:
+
+```mermaid
+graph LR
+    MODEL["🤖 Model"] -->|"Generates code"| LUA["📜 Lua / Python<br/>script"]
+    LUA -->|"Executed by"| RUNTIME["⚙️ Separate Runtime<br/>Game engine, sandbox, etc."]
+    RUNTIME -->|"Touches"| SYSTEM["💻 Filesystem,<br/>Network, etc."]
+
+    SPF["🛡️ SPFsmartGATE"] -.->|"Never sees<br/>these actions"| RUNTIME
+
+    style MODEL fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style LUA fill:#F39C12,stroke:#E67E22,color:#fff
+    style RUNTIME fill:#E74C3C,stroke:#C0392B,color:#fff
+    style SYSTEM fill:#3498DB,stroke:#2980B9,color:#fff
+    style SPF fill:#95A5A6,stroke:#7F8C8D,color:#fff
+```
+
+The gate sits on the MCP layer. If the dangerous action never goes through MCP, the gate is irrelevant. Security in code-generation architectures belongs in the **executor** — not the protocol layer:
+
+- **Game engines** (Unity, Godot) sandbox Lua/GDScript with whitelisted API surfaces
+- **Jupyter/IPython** can restrict kernel capabilities
+- **Docker/Firecracker** isolate the entire execution environment
+- **seccomp/AppArmor** restrict system calls at the OS level
+- **WASM sandboxes** (Wasmtime, Wasmer) give memory-safe execution with no host access by default
+
+This isn't a flaw in SPFsmartGATE — it's a scope boundary. MCP tool gating and code execution sandboxing solve different problems at different layers. If your AI agents talk MCP, SPFsmartGATE gates them. If they generate code for a runtime to execute, you need to sandbox the runtime.
+
 ---
 
 ## Where does it actually run?
