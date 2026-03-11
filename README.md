@@ -246,15 +246,40 @@ SPFsmartGATE/
 
 ---
 
-## Platform support
+## Where does this actually run?
 
-| Platform | Status |
-|----------|--------|
-| Android (Termux) | Primary development and testing platform |
-| Linux x86_64 | CI builds, should work |
-| macOS (Apple Silicon) | CI builds, should work |
-| macOS (Intel) | CI builds (cross-compile), less tested |
-| Windows x86_64 | CI builds, platform code exists but least tested |
+SPFsmartGATE compiles to a single native binary. It runs on anything with a Linux terminal — but whether you *need* it depends on the device.
+
+### Phones and tablets
+
+| Device | Can it run? | Do you need it? |
+|---|---|---|
+| **Android phone/tablet (Termux)** | Yes — primary platform, battle-tested | **Yes.** Docker doesn't work here. If you're running local models (Ollama, llama.cpp) with MCP tool access on your phone, this is one of the few ways to gate them. |
+| **iPhone / iPad** | **No.** iOS doesn't allow terminal apps or background binaries. | N/A — iOS sandboxes every app. There's no shared filesystem for an AI agent to access. |
+
+### Single-board computers and edge devices
+
+| Device | Can it run? | Do you need it? |
+|---|---|---|
+| **Raspberry Pi** | Yes — compiles to aarch64-linux | **Yes.** Pi users run small local models for home automation, coding, IoT. Docker is available but heavy on limited RAM. A lightweight compiled gate makes more sense here. |
+| **NVIDIA Jetson** | Yes — aarch64-linux, same as Pi | **Yes.** Jetson runs local models with GPU acceleration. Same situation — lightweight gate beats a Docker container on constrained hardware. |
+| **Other Linux SBCs** (Orange Pi, Rock, etc.) | Yes — if it runs Linux and has a Rust toolchain | Same as Pi/Jetson. Anywhere you're running local models on limited hardware. |
+
+### Desktops and laptops
+
+| Device | Can it run? | Do you need it? |
+|---|---|---|
+| **Linux desktop/laptop** | Yes — CI builds for x86_64 | **Probably not.** Docker works fine here. If you're using Claude/GPT through their APIs, the models are well-behaved and Docker sandboxing is the simpler answer. *Could* be useful if you're running uncensored local models without containers. |
+| **macOS** | Yes — CI builds for Apple Silicon and Intel | **Probably not.** Same as Linux — Docker and Apple Container sandboxing work well. Built-in Claude Code security is usually enough. |
+| **Windows** | Compiles via CI, least tested | **Probably not.** WSL2 + Docker is the standard approach. SPFsmartGATE hasn't been stress-tested here. |
+
+### The pattern
+
+**SPFsmartGATE is most valuable where two things are true at the same time:**
+1. You're running models that lack strong safety training (small local models, uncensored fine-tunes)
+2. Docker/container sandboxing isn't available or practical (phones, low-RAM SBCs, edge devices)
+
+On a desktop with Docker and a frontier model, you don't need it.
 
 ---
 
