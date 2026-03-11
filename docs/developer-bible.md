@@ -11,6 +11,50 @@
 
 ---
 
+## System Map
+
+```mermaid
+graph TD
+    MAIN["main.rs<br/>CLI entry, 12 subcommands"] --> MCP["mcp.rs<br/>MCP server, 55 tools"]
+    MAIN --> CONFIG["config.rs<br/>SpfConfig + paths"]
+    MAIN --> SESSION["session.rs<br/>Session state"]
+    MAIN --> STORAGE["storage.rs<br/>LMDB session wrapper"]
+
+    MCP --> GATE["gate.rs<br/>5-stage pipeline"]
+    GATE --> VALIDATE["validate.rs<br/>Path + command checks"]
+    GATE --> INSPECT["inspect.rs<br/>Content scanning"]
+    GATE --> CALC["calculate.rs<br/>Complexity scoring"]
+
+    MCP --> WEB["web.rs<br/>HTTP + SSRF protection"]
+    MCP --> FS["fs.rs<br/>Virtual filesystem"]
+
+    MCP --> DB1["config_db.rs<br/>LMDB 2"]
+    MCP --> DB2["projects_db.rs<br/>LMDB 3"]
+    MCP --> DB3["tmp_db.rs<br/>LMDB 4"]
+    MCP --> DB4["agent_state.rs<br/>LMDB 5"]
+
+    MAIN --> PATHS["paths.rs<br/>Root + platform detection"]
+
+    style MAIN fill:#E74C3C,stroke:#C0392B,color:#fff
+    style MCP fill:#F39C12,stroke:#E67E22,color:#fff
+    style GATE fill:#27AE60,stroke:#219A52,color:#fff
+    style VALIDATE fill:#3498DB,stroke:#2980B9,color:#fff
+    style INSPECT fill:#3498DB,stroke:#2980B9,color:#fff
+    style CALC fill:#3498DB,stroke:#2980B9,color:#fff
+    style CONFIG fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style SESSION fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style STORAGE fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style WEB fill:#1ABC9C,stroke:#16A085,color:#fff
+    style FS fill:#1ABC9C,stroke:#16A085,color:#fff
+    style DB1 fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style DB2 fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style DB3 fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style DB4 fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style PATHS fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+```
+
+---
+
 # TABLE OF CONTENTS
 
 1. [Architecture & Module System](#block-1)

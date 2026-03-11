@@ -4,6 +4,29 @@
 > **Role**: JSON-RPC 2.0 server over stdio — the single entry point for ALL AI agent tool calls
 > **Copyright**: 2026 Joseph Stone — All Rights Reserved
 
+```mermaid
+graph TD
+    TOOLS["55 Exposed Tools"] --> CORE["🛡️ Core Gate<br/>calculate, status, session"]
+    TOOLS --> FILES["📁 File Ops<br/>read, write, edit, bash"]
+    TOOLS --> SEARCH["🔍 Search<br/>glob, grep"]
+    TOOLS --> WEB["🌐 Web<br/>search, fetch, download, api"]
+    TOOLS --> BRAIN["🧠 Brain<br/>9 vector search tools"]
+    TOOLS --> RAG["📚 RAG<br/>16 document tools"]
+    TOOLS --> DB["💾 Databases<br/>config, projects, tmp, agent"]
+
+    BLOCKED["13 Hidden Handlers<br/>Not in registry"] -.->|"BLOCKED response"| TOOLS
+
+    style TOOLS fill:#F39C12,stroke:#E67E22,color:#fff
+    style CORE fill:#E74C3C,stroke:#C0392B,color:#fff
+    style FILES fill:#3498DB,stroke:#2980B9,color:#fff
+    style SEARCH fill:#3498DB,stroke:#2980B9,color:#fff
+    style WEB fill:#27AE60,stroke:#219A52,color:#fff
+    style BRAIN fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style RAG fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style DB fill:#1ABC9C,stroke:#16A085,color:#fff
+    style BLOCKED fill:#95A5A6,stroke:#7F8C8D,color:#fff
+```
+
 ---
 
 ## 11.1 MCP SERVER IDENTITY & PROTOCOL
@@ -230,6 +253,24 @@ Any unknown tool name → `"Unknown tool: {name}"` (DEFAULT DENY)
 
 ## 11.5 LMDB PARTITION ROUTING SYSTEM (Lines 714-1140)
 
+```mermaid
+graph TD
+    PATH["Virtual Path"] --> ROUTE{"route_to_lmdb()"}
+    ROUTE -->|"/config/*"| CFG["CONFIG.DB<br/>Read-only mount"]
+    ROUTE -->|"/tmp/*"| TMP["LIVE/TMP/TMP/<br/>Device filesystem"]
+    ROUTE -->|"/projects/*"| PROJ["LIVE/PROJECTS/<br/>Device filesystem"]
+    ROUTE -->|"/home/agent/*"| AGENT["LMDB5.DB<br/>Read-only from AI"]
+    ROUTE -->|"Everything else"| FS["SPF_FS.DB<br/>Virtual filesystem"]
+
+    style PATH fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style ROUTE fill:#F39C12,stroke:#E67E22,color:#fff
+    style CFG fill:#3498DB,stroke:#2980B9,color:#fff
+    style TMP fill:#27AE60,stroke:#219A52,color:#fff
+    style PROJ fill:#27AE60,stroke:#219A52,color:#fff
+    style AGENT fill:#1ABC9C,stroke:#16A085,color:#fff
+    style FS fill:#E74C3C,stroke:#C0392B,color:#fff
+```
+
 The virtual filesystem routes `spf_fs_*` operations to the correct LMDB database or device directory based on path prefix.
 
 ### 11.5.1 `route_to_lmdb(path, op, content, config_db, tmp_db, agent_db) → Option<Value>`
@@ -331,16 +372,28 @@ The rename handler has **special device-backed directory logic** that runs BEFOR
 
 Every handler follows a consistent security pattern:
 
-```
-1. EXTRACT params from args JSON
-2. BUILD ToolParams struct
-3. GATE CHECK: gate::process(tool_name, &params, config, session)
-   → If !allowed: record_manifest(BLOCKED) → save session → return BLOCKED
-4. RECORD ACTION: session.record_action(category, action, detail)
-5. EXECUTE the actual operation
-6. RECORD MANIFEST: session.record_manifest(tool, C, status, notes)
-7. SAVE SESSION: storage.save_session(session)
-8. RETURN result JSON
+```mermaid
+graph TD
+    CALL["Tool Call"] --> EXTRACT["1. Extract params"]
+    EXTRACT --> BUILD["2. Build ToolParams"]
+    BUILD --> GATE{"3. Gate Check<br/>gate::process()"}
+    GATE -->|"Blocked"| BLOCKED["Record BLOCKED<br/>Save session<br/>Return error"]
+    GATE -->|"Allowed"| RECORD["4. Record action"]
+    RECORD --> EXEC["5. Execute operation"]
+    EXEC --> MANIFEST["6. Record manifest"]
+    MANIFEST --> SAVE["7. Save session"]
+    SAVE --> RETURN["8. Return result"]
+
+    style CALL fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style EXTRACT fill:#3498DB,stroke:#2980B9,color:#fff
+    style BUILD fill:#3498DB,stroke:#2980B9,color:#fff
+    style GATE fill:#F39C12,stroke:#E67E22,color:#fff
+    style BLOCKED fill:#E74C3C,stroke:#C0392B,color:#fff
+    style RECORD fill:#27AE60,stroke:#219A52,color:#fff
+    style EXEC fill:#27AE60,stroke:#219A52,color:#fff
+    style MANIFEST fill:#27AE60,stroke:#219A52,color:#fff
+    style SAVE fill:#27AE60,stroke:#219A52,color:#fff
+    style RETURN fill:#27AE60,stroke:#219A52,color:#fff
 ```
 
 ### Critical Handler Details:
