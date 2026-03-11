@@ -5,7 +5,7 @@
 <h1 align="center">SPFsmartGATE</h1>
 
 <p align="center">
-  <strong>A compiled security gate for AI agents. Built in Rust. Can't be talked out of doing its job.</strong>
+  <strong>A compiled MCP server for AI agents — security gate + knowledge management. Built in Rust.</strong>
 </p>
 
 <p align="center">
@@ -18,21 +18,37 @@
 
 ## What is this?
 
-A compiled Rust binary that sits between an AI agent and your system. Every tool call — file reads, writes, bash commands, web requests — passes through a 5-stage security pipeline before execution. The rules are in the compiled code, not in a prompt. No amount of clever text can override them.
+An MCP server that does two things: **security gating** and **knowledge management** for AI agents, in a single compiled Rust binary.
 
 ```mermaid
-graph LR
-    A["🤖 AI Agent"] -->|Every tool call| B{"🛡️ SPFsmartGATE"}
-    B -->|"Safe ✅"| C["💻 Your System"]
-    B -->|"Dangerous 🚫"| D["❌ Blocked + reason"]
+graph TD
+    AI["🤖 AI Agent"] -->|"MCP tool calls"| SPF["🛡️ SPFsmartGATE<br/>55 MCP tools"]
 
-    style A fill:#6C5CE7,stroke:#5A4BD1,color:#fff
-    style B fill:#F39C12,stroke:#E67E22,color:#fff
-    style C fill:#27AE60,stroke:#219A52,color:#fff
-    style D fill:#E74C3C,stroke:#C0392B,color:#fff
+    SPF --> GATE["Security Gate — 30 tools<br/>File ops, bash, web, search<br/>Every call checked by 5-stage pipeline"]
+    SPF --> KNOW["Knowledge System — 25 tools<br/>Vector search, document collection,<br/>RAG, semantic recall"]
+
+    GATE -->|"Safe ✅"| SYS["💻 Your System"]
+    GATE -->|"Dangerous 🚫"| BLOCK["❌ Blocked + reason"]
+    KNOW -->|"Query/store"| BRAIN["🧠 Brain + RAG<br/>Requires external binaries"]
+
+    style AI fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style SPF fill:#F39C12,stroke:#E67E22,color:#fff
+    style GATE fill:#27AE60,stroke:#219A52,color:#fff
+    style KNOW fill:#3498DB,stroke:#2980B9,color:#fff
+    style SYS fill:#27AE60,stroke:#219A52,color:#fff
+    style BLOCK fill:#E74C3C,stroke:#C0392B,color:#fff
+    style BRAIN fill:#6C5CE7,stroke:#5A4BD1,color:#fff
 ```
 
-When something is blocked, the AI gets a specific error (`BLOCKED | tool | reason`) so it can change direction — not just fail silently.
+### The security gate (30 tools — ships standalone)
+
+Every file read, write, bash command, and web request passes through a 5-stage security pipeline. The rules are in the compiled code, not in a prompt — no amount of clever text can override them. When something is blocked, the AI gets a specific error (`BLOCKED | tool | reason`) so it can change direction.
+
+### The knowledge system (25 tools — requires external binaries)
+
+9 Brain tools provide vector search and semantic recall via a separate Rust binary (`stoneshell-brain`). 16 RAG tools handle document collection, indexing, RSS feeds, and smart search via a Python server. These tools also pass through the security gate, but their purpose is building a persistent knowledge base — not security.
+
+> **Important:** The Brain and RAG tools require external software not included in this repo. The security gate works fully standalone. See [how it works](docs/how-it-works.md) for details on what ships vs. what needs separate installation.
 
 ---
 
