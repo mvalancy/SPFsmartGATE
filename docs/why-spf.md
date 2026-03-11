@@ -8,6 +8,21 @@ level** — preventing the action regardless of what the AI was
 told. It's the difference between a "Please Don't Enter" sign
 and a locked steel door.
 
+```mermaid
+graph LR
+    AI["🤖 AI Agent"] --> PROMPT["📝 Prompt Rules<br/>Can be overridden"]
+    AI --> GATE["🛡️ Compiled Gate<br/>Cannot be overridden"]
+
+    PROMPT -->|"Prompt injection"| BYPASS["⚠️ Bypassed"]
+    GATE -->|"Any input"| ENFORCED["✅ Always enforced"]
+
+    style AI fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style PROMPT fill:#E74C3C,stroke:#C0392B,color:#fff
+    style GATE fill:#27AE60,stroke:#219A52,color:#fff
+    style BYPASS fill:#E74C3C,stroke:#C0392B,color:#fff
+    style ENFORCED fill:#27AE60,stroke:#219A52,color:#fff
+```
+
 ---
 
 ## Binary Enforcement — Not Prompt-Based Safety
@@ -71,6 +86,22 @@ No runtime overhead for cross-platform support.
 
 ## MCP Protocol — Universal AI Compatibility
 
+```mermaid
+graph TD
+    CLAUDE["Claude"] --> MCP["📡 MCP Protocol<br/>JSON-RPC 2.0 / stdio"]
+    GPT["GPT + adapter"] --> MCP
+    LOCAL["Local LLM<br/>Ollama, llama.cpp"] --> MCP
+    FUTURE["Future models"] --> MCP
+    MCP --> GATE["🛡️ SPFsmartGATE<br/>Gates everyone equally"]
+
+    style CLAUDE fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style GPT fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style LOCAL fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style FUTURE fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style MCP fill:#3498DB,stroke:#2980B9,color:#fff
+    style GATE fill:#F39C12,stroke:#E67E22,color:#fff
+```
+
 SPFsmartGATE implements the **Model Context Protocol (MCP)** —
 the open standard for AI agent tool communication.
 
@@ -104,6 +135,21 @@ IPC mechanism in computing.
 ---
 
 ## 5-Layer Persistence Architecture
+
+```mermaid
+graph TD
+    L1["Layer 1: LMDB Session<br/>Survives reboots + crashes"] --> L2
+    L2["Layer 2: Agent Memory<br/>Survives session boundaries"] --> L3
+    L3["Layer 3: Brain Vectors<br/>Survives concept drift"] --> L4
+    L4["Layer 4: Context Compaction<br/>Survives token overflow"] --> L5
+    L5["Layer 5: Codebase<br/>Survives everything"]
+
+    style L1 fill:#E74C3C,stroke:#C0392B,color:#fff
+    style L2 fill:#E67E22,stroke:#D35400,color:#fff
+    style L3 fill:#F39C12,stroke:#E67E22,color:#fff
+    style L4 fill:#3498DB,stroke:#2980B9,color:#fff
+    style L5 fill:#27AE60,stroke:#219A52,color:#fff
+```
 
 Most AI agents are stateless — every session starts from zero.
 SPFsmartGATE provides 5 layers of persistent memory that
@@ -160,6 +206,29 @@ work begins. **With SPFsmartGATE:** 1–3 turns to full context.
 ---
 
 ## Multi-Instance Agent Specialization
+
+```mermaid
+graph TD
+    TEAM["🏗️ Multi-Agent Team"] --> CW["Code Writer<br/>src/ only, full tools"]
+    TEAM --> CR["Code Reviewer<br/>read-only, search only"]
+    TEAM --> DA["Deploy Agent<br/>configs only, bash + files"]
+    TEAM --> RA["Research Agent<br/>no writes, web + brain"]
+
+    CW --> DB1["💾 Own 6 LMDBs"]
+    CR --> DB2["💾 Own 6 LMDBs"]
+    DA --> DB3["💾 Own 6 LMDBs"]
+    RA --> DB4["💾 Own 6 LMDBs"]
+
+    style TEAM fill:#F39C12,stroke:#E67E22,color:#fff
+    style CW fill:#E74C3C,stroke:#C0392B,color:#fff
+    style CR fill:#3498DB,stroke:#2980B9,color:#fff
+    style DA fill:#27AE60,stroke:#219A52,color:#fff
+    style RA fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style DB1 fill:#1ABC9C,stroke:#16A085,color:#fff
+    style DB2 fill:#1ABC9C,stroke:#16A085,color:#fff
+    style DB3 fill:#1ABC9C,stroke:#16A085,color:#fff
+    style DB4 fill:#1ABC9C,stroke:#16A085,color:#fff
+```
 
 Each SPFsmartGATE instance is entirely self-contained — its own
 6 LMDB databases, its own configuration, its own brain. This
