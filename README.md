@@ -138,9 +138,18 @@ graph TD
 2. The AI tries to read files, write code, run commands, or hit the web
 3. SPFsmartGATE intercepts every action *before* it happens
 4. The gate checks safety, logs what happened, and blocks anything dangerous
-5. Safe actions go through — you don't even notice the gate is there
+5. Safe actions go through normally
 
-The AI doesn't know it's being gated. It just calls tools like `spf_read` and `spf_write` instead of the native ones. From its perspective, everything works normally. From your perspective, the dangerous stuff never happens.
+### What happens when something is blocked?
+
+The AI **does** find out. When the gate blocks an action, it sends back a specific error message explaining what was blocked and why. For example:
+
+- `BLOCKED | spf_write | path /etc/hosts is blocked` — the AI knows the path isn't allowed and can try a different location
+- `BLOCKED | spf_edit | BUILD ANCHOR — must read file before editing` — the AI knows it needs to read the file first, then retry
+- `BLOCKED | spf_bash | dangerous command pattern detected` — the AI knows the command was rejected and can try a safer approach
+- `BLOCKED | unknown tool 'evil_tool' — not in gate allowlist` — the AI knows that tool doesn't exist in the system
+
+This is important. A silent block would be useless — the AI would just keep retrying the same thing. Instead, the error message gives the AI enough information to **change direction**: use a different path, read the file first, rephrase the command, or ask the user for guidance. The gate blocks the dangerous action *and* teaches the AI why, so it can recover.
 
 ---
 
