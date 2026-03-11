@@ -38,23 +38,44 @@ When something is blocked, the AI gets a specific error (`BLOCKED | tool | reaso
 
 ## Do you actually need this?
 
-**It depends on what models you're running.**
+> **If you have a desktop or laptop with 16GB+ RAM: you probably don't.** Use Docker, a VM, or container sandboxing — it's simpler, more robust, and works with any model. SPFsmartGATE exists for environments where those options aren't available.
 
-Frontier models (Claude, GPT-4o, Gemini Pro) have strong safety training — they don't go rogue in practice. People run `claude --dangerously-skip-permissions` for months without incidents. For those models, a compiled gate is overkill.
+### The simpler alternatives you should try first
 
-**The real risk is small, local, and uncensored models.** A 3B parameter model running on your phone through MCP will hallucinate tool calls, invent file paths, and attempt destructive commands. An "abliterated" fine-tune has its safety training deliberately removed. These models need a gate.
+If you have a real computer (desktop, laptop, workstation, dev server), you have better options:
 
-| Risk | Models | Need a gate? |
+| Approach | What it does | When to use it |
 |---|---|---|
-| **Low** | Claude, GPT-4o, Gemini Pro | Probably not |
-| **Medium** | Llama 3 70B, Mistral Large | It helps |
-| **High** | Small local models (0.5B-7B), uncensored fine-tunes, unknown MCP agents | **Yes** |
+| **Docker sandbox** | Runs the AI in an isolated container. If it breaks everything inside, your host is untouched. | Any desktop/laptop. Official Claude Code support. The simplest answer. |
+| **Virtual machine** | Full OS isolation. The AI gets its own filesystem, network, and kernel. Even more isolated than Docker. | When you want total isolation, or you're running untrusted models you really don't trust. Heavier but bulletproof. |
+| **Firecracker / microVM** | Lightweight VMs with ~80ms cold start (E2B uses this). VM-level isolation, container-level speed. | Cloud/server deployments, multi-tenant agent hosting. |
+| **Claude Code deny rules + hooks** | Built-in path blocking, tool approval prompts, deterministic shell script hooks. | Already using Claude Code with frontier models. ~60-70% of SPFsmartGATE's security coverage with zero extra software. |
 
-**SPFsmartGATE is most valuable where two things are true at once:**
-1. The model lacks strong safety training
-2. Docker/container sandboxing isn't available (primarily Android phones)
+**If you have 32-128GB RAM, a GPU, and Docker installed — just use Docker.** It's the right tool. SPFsmartGATE is solving a different problem.
 
-**Important scope limitation:** SPFsmartGATE only gates **MCP tool calls** — direct `tools/call` requests over JSON-RPC. If your architecture has the model generate code (Lua, Python, etc.) that a separate runtime executes, the gate never sees those actions. That's a fundamentally different pattern — common in game engines and scripting sandboxes — where security belongs in the executor layer, not the MCP layer. See [threat model](docs/threat-model.md) for details.
+### Where SPFsmartGATE actually fits
+
+The niche is narrow but real: **Android phones and tablets running local models through MCP.**
+
+```mermaid
+graph TD
+    Q{"Where are you<br/>running AI agents?"} -->|"Desktop / laptop / server<br/>16GB+ RAM"| DOCKER["Use Docker or a VM<br/>You don't need SPFsmartGATE"]
+    Q -->|"Android phone / tablet<br/>via Termux"| SPF["SPFsmartGATE is<br/>one of your few options"]
+    Q -->|"Very low-RAM SBC<br/>1-2GB Pi, no Docker"| MAYBE["SPFsmartGATE helps<br/>if Docker won't fit"]
+
+    style Q fill:#F39C12,stroke:#E67E22,color:#fff
+    style DOCKER fill:#3498DB,stroke:#2980B9,color:#fff
+    style SPF fill:#27AE60,stroke:#219A52,color:#fff
+    style MAYBE fill:#F39C12,stroke:#E67E22,color:#fff
+```
+
+- **Android/Termux** — Docker doesn't work reliably here. If you're running Ollama or llama.cpp on your phone with MCP tool access, a compiled security gate is one of the few ways to prevent a 3B model from `rm -rf`-ing your storage. This is the primary use case.
+- **Very low-RAM SBCs** (1-2GB Raspberry Pi) — Docker might not fit alongside the model. A 5MB compiled binary is lighter than a container runtime.
+- **Untrusted MCP agents you want to try** — random agent frameworks from GitHub. The gate lets you give them tool access with guardrails, even on a powerful machine, if you don't want to bother setting up a container for a quick test.
+
+**It does NOT matter what model you're running if you can just put it in a container.** A Docker sandbox protects against a misbehaving GPT-4, Llama 70B, or abliterated 3B model equally — by isolating the entire environment. SPFsmartGATE's per-tool-call filtering is a weaker isolation model that only makes sense when containers aren't an option.
+
+**Scope limitation:** SPFsmartGATE only gates **MCP tool calls** (JSON-RPC over stdio). If your architecture has the model generate code (Lua, Python) that a separate runtime executes, the gate never sees those actions — you need to sandbox the runtime instead. See [threat model](docs/threat-model.md) for details.
 
 Read more: **[Who needs this?](docs/threat-model.md)** — detailed use cases, platform-by-platform guide
 

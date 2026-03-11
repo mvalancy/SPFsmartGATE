@@ -53,12 +53,16 @@ Claude Code's built-in security has gotten strong:
 
 ## Sandboxing — the "just put it in a box" approach
 
-| Tool | Stars | Approach |
-|---|---|---|
-| **[E2B](https://e2b.dev)** | ~11.1K | Firecracker microVMs, 80ms cold start. If the sandbox breaks, the host is untouched. |
-| **Docker Sandboxes** | — | Official Claude Code support. Full filesystem/network isolation. |
+**If you have the RAM and CPU for it, sandboxing is almost always the better answer.** It's a fundamentally different approach — instead of filtering individual tool calls, it isolates the entire environment. Simpler, more robust, harder to get wrong.
 
-Container sandboxing is a fundamentally different approach — instead of filtering individual actions, it isolates the entire environment. It's simpler and arguably more robust. **The main case where it doesn't work: Android/Termux**, where Docker is unreliable or unavailable.
+| Approach | What it does | Requirements |
+|---|---|---|
+| **Docker containers** | Full filesystem/network isolation. Official Claude Code support. If the AI breaks everything inside, your host is untouched. | Docker installed. Works on any desktop/laptop/server. ~200MB overhead. |
+| **Virtual machines** (QEMU/KVM, VirtualBox, UTM) | Complete OS isolation — separate kernel, filesystem, network stack. The strongest isolation possible short of a separate physical machine. | 2-4GB+ RAM to spare. Heavier than Docker but bulletproof. Good for models you really don't trust. |
+| **[E2B](https://e2b.dev)** (~11.1K stars) | Firecracker microVMs with ~80ms cold start. VM-level isolation at container-like speed. | Cloud/server deployments. Great for multi-tenant agent hosting. |
+| **macOS containers** (Apple Containers) | Native lightweight VMs on Apple Silicon. | macOS only. Emerging support. |
+
+**The main case where sandboxing doesn't work: Android/Termux.** Docker is unreliable there, and VMs aren't practical on a phone. That's the niche where SPFsmartGATE provides value — per-tool-call filtering when you can't isolate the whole environment.
 
 ---
 

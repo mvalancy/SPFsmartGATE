@@ -79,11 +79,11 @@ The Rust binary and the hook scripts are two separate layers with different comp
 
 ## Where you don't need it
 
+- **Any machine where you can run Docker or a VM** — if you have 16GB+ RAM and Docker installed, container sandboxing is simpler and more robust than filtering individual tool calls. A VM (QEMU/KVM, VirtualBox, UTM) gives even stronger isolation — the AI gets its own OS and kernel. If you have a workstation with 32-128GB RAM, just spin up a VM and let the agent do whatever it wants inside. Bulletproof.
+
 - **Claude Code on Opus/Sonnet** — the model is well-behaved, Claude Code has built-in deny rules and approval prompts, and Docker sandboxing is available on desktop. Six months of `--dangerously-skip-permissions` with zero incidents is a real data point.
 
-- **Any workflow where Docker sandboxing works** — container isolation is simpler and more robust than filtering individual tool calls. If Docker is an option, use Docker.
-
-- **Standard desktop development with frontier models** — if you're using GPT-4, Claude, or Gemini Pro through their official APIs with normal safety settings, the models themselves are the guardrail.
+- **Standard desktop development with frontier models** — if you're using GPT-4, Claude, or Gemini Pro through their official APIs with normal safety settings, the models themselves are the guardrail. Add Docker for defense in depth if you want.
 
 - **Code-generation architectures (Lua, Python scripting, etc.)** — if the model generates code that a separate runtime executes, SPFsmartGATE has zero visibility into those actions. See below.
 
