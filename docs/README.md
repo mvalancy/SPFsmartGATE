@@ -2,6 +2,36 @@
 
 Start broad, go deep. Each layer adds detail.
 
+```mermaid
+graph TD
+    README["📖 README.md<br/>What is this? Do I need it?"] --> L1
+    L1["Layer 1<br/>Who, how, compared to what"] --> L2
+    L2["Layer 2<br/>Design philosophy"] --> L3
+    L3["Layer 3<br/>Implementation details"]
+
+    README -.-> TM["threat-model.md"]
+    README -.-> HW["how-it-works.md"]
+    README -.-> CMP["comparison.md"]
+    L1 -.-> WHY["why-spf.md"]
+    L1 -.-> BIBLE["developer-bible.md"]
+    L2 -.-> TOOLS["mcp-tools.md"]
+    L2 -.-> HOOKS["hooks.md"]
+    L2 -.-> DEPLOY["deployment.md"]
+
+    style README fill:#E74C3C,stroke:#C0392B,color:#fff
+    style L1 fill:#F39C12,stroke:#E67E22,color:#fff
+    style L2 fill:#3498DB,stroke:#2980B9,color:#fff
+    style L3 fill:#27AE60,stroke:#219A52,color:#fff
+    style TM fill:#F39C12,stroke:#E67E22,color:#fff
+    style HW fill:#F39C12,stroke:#E67E22,color:#fff
+    style CMP fill:#F39C12,stroke:#E67E22,color:#fff
+    style WHY fill:#3498DB,stroke:#2980B9,color:#fff
+    style BIBLE fill:#3498DB,stroke:#2980B9,color:#fff
+    style TOOLS fill:#27AE60,stroke:#219A52,color:#fff
+    style HOOKS fill:#27AE60,stroke:#219A52,color:#fff
+    style DEPLOY fill:#27AE60,stroke:#219A52,color:#fff
+```
+
 ## Layer 1 — Why and who
 
 | Document | Description |
