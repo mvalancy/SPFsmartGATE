@@ -52,7 +52,7 @@ Frontier models (Claude, GPT-4o, Gemini Pro) have strong safety training — the
 
 **SPFsmartGATE is most valuable where two things are true at once:**
 1. The model lacks strong safety training
-2. Docker/container sandboxing isn't available (phones, low-RAM SBCs, edge devices)
+2. Docker/container sandboxing isn't available (primarily Android phones)
 
 **Important scope limitation:** SPFsmartGATE only gates **MCP tool calls** — direct `tools/call` requests over JSON-RPC. If your architecture has the model generate code (Lua, Python, etc.) that a separate runtime executes, the gate never sees those actions. That's a fundamentally different pattern — common in game engines and scripting sandboxes — where security belongs in the executor layer, not the MCP layer. See [threat model](docs/threat-model.md) for details.
 

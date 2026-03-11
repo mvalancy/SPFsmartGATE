@@ -129,7 +129,7 @@ graph LR
     SPF["🛡️ SPFsmartGATE"]
 
     SPF --> PHONE["📱 Android/Termux<br/>Primary platform"]
-    SPF --> SBC["🔧 Raspberry Pi<br/>Jetson, SBCs"]
+    SPF --> SBC["🔧 Raspberry Pi<br/>Low-RAM SBCs"]
     SPF --> LINUX["🐧 Linux x86_64"]
     SPF --> MAC["🍎 macOS<br/>ARM + Intel"]
     SPF --> WIN["🪟 Windows<br/>Least tested"]
@@ -155,9 +155,9 @@ graph LR
 
 | Device | Can it run? | Do you need it? |
 |---|---|---|
-| **Raspberry Pi** | Yes — compiles to aarch64-linux | **Yes.** Pi users run small local models for home automation, coding, IoT. Docker is available but heavy on limited RAM. A lightweight compiled gate makes more sense here. |
-| **NVIDIA Jetson** | Yes — aarch64-linux, same as Pi | **Yes.** Jetson runs local models with GPU acceleration. Same situation — lightweight gate beats a Docker container on constrained hardware. |
-| **Other Linux SBCs** (Orange Pi, Rock, etc.) | Yes — if it runs Linux and has a Rust toolchain | Same as Pi/Jetson. Anywhere you're running local models on limited hardware. |
+| **Raspberry Pi** (1-8GB RAM) | Yes — compiles to aarch64-linux | **Maybe.** Pi users run small local models for home automation, coding, IoT. Docker works on Pi but is heavy on 1-2GB models. On a Pi 5 with 8GB, Docker is fine — use that instead. On low-RAM Pis running small models, the lightweight gate makes more sense. |
+| **NVIDIA Jetson** (Nano to Orin AGX) | Yes — aarch64-linux | **Probably not.** Jetsons are powerful — even the Nano has 4-8GB RAM, and the Orin AGX has 32-64GB with 275 TOPS. Docker runs fine on Jetson. Use container sandboxing. SPFsmartGATE would only add value if you specifically need MCP-level tool gating on top of containers. |
+| **Other Linux SBCs** (Orange Pi, Rock, etc.) | Yes — if it runs Linux and has a Rust toolchain | Depends on RAM. Same logic as Pi — if Docker fits, use Docker. If you're RAM-constrained and running small models, the gate helps. |
 
 ### Desktops and laptops
 
@@ -171,9 +171,9 @@ graph LR
 
 **SPFsmartGATE is most valuable where two things are true at the same time:**
 1. You're running models that lack strong safety training (small local models, uncensored fine-tunes)
-2. Docker/container sandboxing isn't available or practical (phones, low-RAM SBCs, edge devices)
+2. Docker/container sandboxing isn't available or practical (Android phones, very low-RAM SBCs)
 
-On a desktop with Docker and a frontier model, you don't need it.
+In practice, this means **Android/Termux is the primary use case**. Most Linux devices powerful enough to run local models can also run Docker — and if Docker works, it's the simpler answer.
 
 ---
 
