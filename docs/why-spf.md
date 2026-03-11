@@ -306,13 +306,13 @@ cargo build --release
 
 | Document | Focus |
 |----------|-------|
-| [README.md](README.md) | Architecture, installation, CLI reference |
-| [SPFsmartGATEdevBIBLE.md](SPFsmartGATEdevBIBLE.md) | Complete technical deep-dive — all 13 blocks |
-| [MCP_TOOLS.md](MCP_TOOLS.md) | Full tool reference — 55 tools + parameters |
-| [HOOKS.md](HOOKS.md) | Hook system — 31 lifecycle scripts |
-| [DEPLOYMENT.md](DEPLOYMENT.md) | Build system, config, directory layout |
-| [SECURITY.md](SECURITY.md) | Security policy and reporting |
-| [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [README.md](../README.md) | Architecture, installation, CLI reference |
+| [Developer Bible](developer-bible.md) | Complete technical deep-dive — all 13 blocks |
+| [MCP Tools](mcp-tools.md) | Full tool reference — 55 tools + parameters |
+| [Hooks](hooks.md) | Hook system — 31 lifecycle scripts |
+| [Deployment](deployment.md) | Build system, config, directory layout |
+| [SECURITY.md](../SECURITY.md) | Security policy and reporting |
+| [CHANGELOG.md](../CHANGELOG.md) | Version history |
 
 ---
 
