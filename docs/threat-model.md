@@ -60,6 +60,23 @@ The MCP protocol is model-agnostic — any AI agent that speaks MCP can call too
 
 - **Unknown third-party MCP agents** — random agent frameworks from GitHub that you want to try but don't fully trust. The gate lets you give them tool access with guardrails.
 
+## What clients does it actually work with?
+
+The Rust binary and the hook scripts are two separate layers with different compatibility:
+
+| Setup | How it works | Effort |
+|---|---|---|
+| **Claude Code** | Full support. `bash setup.sh` configures everything — hooks block native tools, force all actions through the Rust gate. Plug and play. | Just run setup. |
+| **Cursor, Windsurf, Zed** (or any MCP client) | The Rust binary works as a standard MCP server — add it to the client's MCP config and the `spf_*` tools appear. All security checks work. | You need to configure the client to use `spf_read`/`spf_write`/`spf_bash` instead of its native tools. The hook scripts won't do this for you — they're Claude Code specific. |
+| **Custom agents** (Python, Node, Rust) | Spawn `spf-smart-gate serve` as a subprocess, talk JSON-RPC 2.0 over stdin/stdout. You get all 55 gated tools. | You write the MCP client integration. The [MCP spec](https://modelcontextprotocol.io/) is straightforward. |
+| **Non-MCP agents** (Lua scripting, REST APIs, code generation) | Doesn't apply. If the agent doesn't send MCP `tools/call` requests, the gate never sees the actions. | Use executor-level sandboxing instead (Docker, seccomp, WASM). |
+
+**The hook layer is the Claude Code-specific part.** It intercepts Claude Code's native `Read`, `Write`, `Edit`, `Bash` etc. tools and blocks them (`exit 1`), forcing the AI to use `spf_read`, `spf_write`, `spf_edit`, `spf_bash` instead. Other MCP clients have their own native tools and would need their own equivalent redirect mechanism — or you'd configure the agent to only use `spf_*` tools directly.
+
+**The Rust binary is the universal part.** It speaks standard MCP. Any client that can spawn a process and talk JSON-RPC over stdio can use it.
+
+---
+
 ## Where you don't need it
 
 - **Claude Code on Opus/Sonnet** — the model is well-behaved, Claude Code has built-in deny rules and approval prompts, and Docker sandboxing is available on desktop. Six months of `--dangerously-skip-permissions` with zero incidents is a real data point.

@@ -60,6 +60,41 @@ Read more: **[Who needs this?](docs/threat-model.md)** — detailed use cases, p
 
 ---
 
+## What can I actually use this with?
+
+SPFsmartGATE has two layers, and they work with different things:
+
+```mermaid
+graph TD
+    RUST["🛡️ Rust Binary<br/>Standard MCP server<br/>Works with any MCP client"] --- HOOKS["📜 Hook Scripts<br/>31 shell scripts<br/>Claude Code only"]
+
+    RUST -->|"Full support"| CC["Claude Code"]
+    RUST -->|"Binary works,<br/>no hooks"| CURSOR["Cursor, Windsurf,<br/>Zed, other MCP clients"]
+    RUST -->|"Binary works,<br/>no hooks"| CUSTOM["Custom agents<br/>Python, Node, etc."]
+    HOOKS -->|"Blocks native tools,<br/>forces MCP route"| CC
+
+    RUST -.->|"Doesn't apply"| NONMCP["Non-MCP agents<br/>Lua scripting, REST APIs"]
+
+    style RUST fill:#F39C12,stroke:#E67E22,color:#fff
+    style HOOKS fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style CC fill:#27AE60,stroke:#219A52,color:#fff
+    style CURSOR fill:#3498DB,stroke:#2980B9,color:#fff
+    style CUSTOM fill:#3498DB,stroke:#2980B9,color:#fff
+    style NONMCP fill:#95A5A6,stroke:#7F8C8D,color:#fff
+```
+
+| Setup | What works | What doesn't |
+|---|---|---|
+| **Claude Code** (full setup) | Everything. Hooks block native tools (Read, Write, Bash, etc.) and force them through the Rust gate. The AI can't bypass security by using native tools instead of `spf_*` tools. | — |
+| **Other MCP clients** (Cursor, Windsurf, custom agents) | The Rust binary works as a standard MCP server — any client that spawns a subprocess and talks JSON-RPC over stdio can connect. All 55 gated tools, all security checks, all LMDB tracking. | The hook scripts don't work. These clients have their own native tools, and there's nothing forcing them to use `spf_read` instead of their own `Read`. You'd need to configure the client to only use SPF tools. |
+| **Non-MCP agents** (Lua scripting, REST-based, code generation) | Nothing. If the agent doesn't talk MCP, the gate never sees the actions. | Everything. Security needs to be in the executor layer instead. |
+
+**Bottom line:** Full plug-and-play with Claude Code. Works as an MCP server with other clients but needs manual configuration. Irrelevant if MCP isn't in the picture.
+
+Read more: **[Who needs this?](docs/threat-model.md)** — includes code-generation vs. MCP architecture comparison
+
+---
+
 ## Quick start
 
 ```bash
