@@ -2,6 +2,29 @@
 
 There are other ways to solve the "keep the AI from breaking my system" problem. Here's an honest look at where SPFsmartGATE sits relative to them.
 
+```mermaid
+graph TD
+    PROBLEM["🔒 Keep AI from<br/>breaking my system"] --> A["Container Isolation<br/>Docker, E2B"]
+    PROBLEM --> B["Prompt-Level Rules<br/>Deny lists, hooks"]
+    PROBLEM --> C["MCP Gateways<br/>Lasso, ContextForge"]
+    PROBLEM --> D["Compiled Gate<br/>SPFsmartGATE"]
+
+    A -->|"Strongest isolation<br/>but needs Docker"| BEST["Best for desktops"]
+    B -->|"Simple setup<br/>~60-70% overlap with SPF"| GOOD["Good enough for<br/>frontier models"]
+    C -->|"Plugin ecosystems<br/>PII, prompt injection"| ENT["Enterprise / teams"]
+    D -->|"All-in-one binary<br/>works without Docker"| NICHE["Best for mobile +<br/>edge + local models"]
+
+    style PROBLEM fill:#F39C12,stroke:#E67E22,color:#fff
+    style A fill:#3498DB,stroke:#2980B9,color:#fff
+    style B fill:#3498DB,stroke:#2980B9,color:#fff
+    style C fill:#3498DB,stroke:#2980B9,color:#fff
+    style D fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style BEST fill:#27AE60,stroke:#219A52,color:#fff
+    style GOOD fill:#27AE60,stroke:#219A52,color:#fff
+    style ENT fill:#27AE60,stroke:#219A52,color:#fff
+    style NICHE fill:#27AE60,stroke:#219A52,color:#fff
+```
+
 ---
 
 ## Claude Code already does a lot of this

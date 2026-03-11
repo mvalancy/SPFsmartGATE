@@ -1,5 +1,37 @@
 # Who needs SPFsmartGATE?
 
+```mermaid
+graph TD
+    Q1{"What model are<br/>you running?"} -->|"Frontier<br/>Claude, GPT-4o, Gemini"| LOW["Low risk"]
+    Q1 -->|"Mid-size open source<br/>Llama 70B, Mistral"| MED["Medium risk"]
+    Q1 -->|"Small local or uncensored<br/>0.5B-7B, dolphin, abliterated"| HIGH["High risk"]
+
+    LOW --> Q2{"Can you use<br/>Docker?"}
+    MED --> Q3{"Can you use<br/>Docker?"}
+    HIGH --> Q4{"Can you use<br/>Docker?"}
+
+    Q2 -->|Yes| NO1["You don't need SPFsmartGATE"]
+    Q2 -->|No| MAYBE["Consider it"]
+    Q3 -->|Yes| NO2["Docker is simpler"]
+    Q3 -->|No| YES1["SPFsmartGATE helps"]
+    Q4 -->|Yes| BOTH["Docker + gate = best"]
+    Q4 -->|No| YES2["You need SPFsmartGATE"]
+
+    style Q1 fill:#F39C12,stroke:#E67E22,color:#fff
+    style Q2 fill:#3498DB,stroke:#2980B9,color:#fff
+    style Q3 fill:#3498DB,stroke:#2980B9,color:#fff
+    style Q4 fill:#3498DB,stroke:#2980B9,color:#fff
+    style LOW fill:#27AE60,stroke:#219A52,color:#fff
+    style MED fill:#F39C12,stroke:#E67E22,color:#fff
+    style HIGH fill:#E74C3C,stroke:#C0392B,color:#fff
+    style NO1 fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style NO2 fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style MAYBE fill:#F39C12,stroke:#E67E22,color:#fff
+    style YES1 fill:#27AE60,stroke:#219A52,color:#fff
+    style YES2 fill:#27AE60,stroke:#219A52,color:#fff
+    style BOTH fill:#27AE60,stroke:#219A52,color:#fff
+```
+
 **Honest answer: it depends on what models you're running and where.**
 
 If you're using Claude Opus/Sonnet through Anthropic's API, you probably don't. These models have extensive safety training, and in practice they don't go rogue. People run `claude --dangerously-skip-permissions` for months of continuous autonomous use without incidents. The model itself is well-behaved enough that a compiled security gate is overkill for most workflows.
@@ -41,6 +73,26 @@ The MCP protocol is model-agnostic — any AI agent that speaks MCP can call too
 ## Where does it actually run?
 
 SPFsmartGATE compiles to a single native binary. It runs on anything with a Linux terminal — but whether you *need* it depends on the device.
+
+```mermaid
+graph LR
+    SPF["🛡️ SPFsmartGATE"]
+
+    SPF --> PHONE["📱 Android/Termux<br/>Primary platform"]
+    SPF --> SBC["🔧 Raspberry Pi<br/>Jetson, SBCs"]
+    SPF --> LINUX["🐧 Linux x86_64"]
+    SPF --> MAC["🍎 macOS<br/>ARM + Intel"]
+    SPF --> WIN["🪟 Windows<br/>Least tested"]
+    SPF -.->|"Not supported"| IOS["📵 iOS"]
+
+    style SPF fill:#F39C12,stroke:#E67E22,color:#fff
+    style PHONE fill:#27AE60,stroke:#219A52,color:#fff
+    style SBC fill:#27AE60,stroke:#219A52,color:#fff
+    style LINUX fill:#3498DB,stroke:#2980B9,color:#fff
+    style MAC fill:#3498DB,stroke:#2980B9,color:#fff
+    style WIN fill:#95A5A6,stroke:#7F8C8D,color:#fff
+    style IOS fill:#E74C3C,stroke:#C0392B,color:#fff
+```
 
 ### Phones and tablets
 
