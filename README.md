@@ -16,21 +16,68 @@
 
 ---
 
-## The problem
+## Do you actually need this?
 
-You're using an AI assistant like Claude Code to help you write code. It can read files, write code, run terminal commands, and search the web. Most of the time it works great. But sometimes:
+**Honest answer: it depends on what models you're running.**
 
-- It edits a file it never actually read and **introduces bugs into working code**
-- It accidentally puts a secret or API key into content that shouldn't have it
-- It writes to a path outside your project without you noticing
-- It makes a long chain of rapid changes that are hard to review or undo
+If you're using **Claude Opus/Sonnet through Anthropic's API**, you probably don't. These models have extensive safety training, and in practice they don't go rogue. People run `claude --dangerously-skip-permissions` for months of continuous autonomous use without incidents. The model itself is well-behaved enough that a compiled security gate is overkill for most workflows.
 
-Tools like Claude Code already have approval prompts, which help. But those are still **you** being the security guard — reading every action, deciding yes or no, hoping you catch the risky ones. SPFsmartGATE automates that layer so the obviously-dangerous stuff never even reaches you.
+**The real risk isn't frontier models. It's everything else.**
+
+The MCP protocol is model-agnostic — any AI agent that speaks MCP can call tools on your system. As local and open-source models become more capable, more people are plugging them into the same tool-calling infrastructure. These models don't have the same safety training:
 
 ```mermaid
 graph LR
-    A["🤖 AI Agent"] -->|Every action| B{"🛡️ SPFsmartGATE"}
-    B -->|"Safe ✅"| C["💻 Your Computer"]
+    subgraph "Low risk — probably don't need a gate"
+        A1["Claude Opus/Sonnet"] --- A2["GPT-4o/o1"]
+        A2 --- A3["Gemini Pro"]
+    end
+
+    subgraph "Medium risk — gate adds real value"
+        B1["Llama 3 70B"] --- B2["Mistral Large"]
+        B2 --- B3["Command R+"]
+    end
+
+    subgraph "High risk — gate strongly recommended"
+        C1["Small local models<br/>0.5B - 7B on device"] --- C2["Uncensored fine-tunes<br/>dolphin, abliterated"]
+        C2 --- C3["Unknown third-party<br/>MCP agents"]
+    end
+
+    style A1 fill:#27AE60,stroke:#219A52,color:#fff
+    style A2 fill:#27AE60,stroke:#219A52,color:#fff
+    style A3 fill:#27AE60,stroke:#219A52,color:#fff
+    style B1 fill:#F39C12,stroke:#E67E22,color:#fff
+    style B2 fill:#F39C12,stroke:#E67E22,color:#fff
+    style B3 fill:#F39C12,stroke:#E67E22,color:#fff
+    style C1 fill:#E74C3C,stroke:#C0392B,color:#fff
+    style C2 fill:#E74C3C,stroke:#C0392B,color:#fff
+    style C3 fill:#E74C3C,stroke:#C0392B,color:#fff
+```
+
+### Where SPFsmartGATE earns its keep
+
+- **Small local models on device** (0.5B - 7B running on phones, Raspberry Pi, edge hardware via Ollama/llama.cpp) — these models are chaotic. They hallucinate tool calls, invent file paths, and can attempt destructive commands because they lack the safety training of larger models. If you're running a 3B model on your phone through MCP, a compiled gate is the difference between "experimental" and "dangerous."
+
+- **Uncensored/abliterated fine-tunes** — models like dolphin-mixtral or abliterated llama variants are built specifically to remove safety guardrails. People run them for good reasons (research, creative work, avoiding over-refusal), but giving them unrestricted tool access on your actual filesystem is genuinely risky.
+
+- **Multi-agent chains** — when one model orchestrates others, the outer model might be safe but inner models might not be. A gate on the tool layer catches problems regardless of which model in the chain made the call.
+
+- **Android/Termux development** — Docker sandboxing doesn't work reliably on mobile. If you're running local models on an Android device with MCP tool access, SPFsmartGATE is one of the few options for security gating in that environment.
+
+- **Unknown third-party MCP agents** — random agent frameworks from GitHub that you want to try but don't fully trust. The gate lets you give them tool access with guardrails.
+
+### Where you don't need it
+
+- **Claude Code on Opus/Sonnet** — the model is well-behaved, Claude Code has built-in deny rules and approval prompts, and Docker sandboxing is available on desktop. Six months of `--dangerously-skip-permissions` with zero incidents is a real data point.
+
+- **Any workflow where Docker sandboxing works** — container isolation is simpler and more robust than filtering individual tool calls. If Docker is an option, use Docker.
+
+- **Standard desktop development with frontier models** — if you're using GPT-4, Claude, or Gemini Pro through their official APIs with normal safety settings, the models themselves are the guardrail.
+
+```mermaid
+graph LR
+    A["🤖 AI Agent"] -->|Every tool call| B{"🛡️ SPFsmartGATE"}
+    B -->|"Safe ✅"| C["💻 Your System"]
     B -->|"Dangerous 🚫"| D["❌ Blocked"]
 
     style A fill:#6C5CE7,stroke:#5A4BD1,color:#fff
@@ -39,42 +86,11 @@ graph LR
     style D fill:#E74C3C,stroke:#C0392B,color:#fff
 ```
 
-## The solution
+## What it does
 
-**SPFsmartGATE is a compiled Rust program that sits between the AI and your computer.** Every tool call — every file read, every write, every bash command, every web request — has to pass through the gate first. If it's dangerous, the gate blocks it. Period.
-
-The key difference from prompt-based safety: **the AI can't override the binary.** System prompts are text — in theory, a prompt injection could trick the AI into ignoring them. SPFsmartGATE's Rust binary enforces rules at the code level. The AI calls tools, the binary checks them, end of story.
+**SPFsmartGATE is a compiled Rust binary that sits between any MCP-speaking AI agent and your system.** Every tool call passes through a 5-stage security pipeline before execution. The AI can't override it — the rules are in the compiled code, not in a prompt.
 
 > **Important caveat:** The full security model also depends on Claude Code hook scripts being configured correctly (the setup script handles this). The hooks redirect native tools through the gate. If hooks are misconfigured, native tools could bypass the gate. The Rust binary itself is solid — but it's one layer in a defense-in-depth system, not a magic bullet.
-
-```mermaid
-graph TB
-    subgraph "❌ Text-based safety"
-        P["📝 System prompt:<br/>'Don't delete files'"] --> AI1["🤖 AI reads the rules"]
-        AI1 --> BYPASS["⚠️ Prompt injection<br/>can override this"]
-    end
-
-    subgraph "✅ SPFsmartGATE"
-        GATE["🔒 Compiled Rust binary<br/>Rules are in the code"] --> AI2["🤖 AI has no choice"]
-        AI2 --> SAFE["✅ Dangerous actions<br/>are physically blocked"]
-    end
-
-    style P fill:#E74C3C,stroke:#C0392B,color:#fff
-    style AI1 fill:#E74C3C,stroke:#C0392B,color:#fff
-    style BYPASS fill:#E74C3C,stroke:#C0392B,color:#fff
-    style GATE fill:#27AE60,stroke:#219A52,color:#fff
-    style AI2 fill:#27AE60,stroke:#219A52,color:#fff
-    style SAFE fill:#27AE60,stroke:#219A52,color:#fff
-```
-
----
-
-## Who is this for?
-
-- **Solo developers using AI coding assistants** (primarily Claude Code) who want an extra safety net beyond the built-in approval prompts
-- **Anyone running AI tools on their personal machine** who wants defense-in-depth — dangerous patterns blocked automatically, everything logged
-
-> **Current scope:** This is a single-user tool, primarily developed and tested on Android/Termux. It works on Linux/macOS/Windows (CI builds for all), but Android is where it's been battle-tested. Multi-agent team setups are a design concept described in the docs, not a shipped feature yet.
 
 ---
 
