@@ -10,36 +10,27 @@
 
 SPF implements a **dual-layer hook system** that intercepts tool calls at TWO points:
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    CLAUDE CODE CLI                        │
-│                                                          │
-│  User Prompt ──→ [user-prompt.sh] ──→ AI Processing     │
-│                                                          │
-│  AI calls Native Tool (Read/Write/Edit/Bash/etc.)       │
-│       │                                                  │
-│       ▼                                                  │
-│  LAYER 1: Native Pre-Hooks ──→ EXIT 1 = BLOCKED         │
-│  (pre-read.sh, pre-write.sh, pre-edit.sh, etc.)        │
-│       │                                                  │
-│       ▼ (All blocked — forces AI to use MCP tools)      │
-│                                                          │
-│  AI calls MCP Tool (spf_read, spf_write, etc.)          │
-│       │                                                  │
-│       ▼                                                  │
-│  LAYER 2: MCP Pre-Hooks ──→ EXIT 0 = ALLOWED (logged)  │
-│  (pre-mcp-read.sh, pre-mcp-write.sh, etc.)             │
-│       │                                                  │
-│       ▼                                                  │
-│  SPF Gate Pipeline (Rust — gate.rs)                      │
-│       │                                                  │
-│       ▼                                                  │
-│  [post-action.sh] ──→ State checkpoint + STATUS.txt     │
-│  [post-failure.sh] ──→ Failure logging                  │
-│                                                          │
-│  Session End ──→ [session-end.sh] ──→ Handoff note      │
-│  Stop Event  ──→ [stop-check.sh] ──→ State save         │
-└─────────────────────────────────────────────────────────┘
+```mermaid
+graph TD
+    USER["👤 User Prompt"] --> CALC["📊 user-prompt.sh<br/>Complexity calculation"]
+    CALC --> AI["🤖 AI Processing"]
+    AI -->|"Calls native tool<br/>Read, Write, Bash..."| L1["🚫 Layer 1: Native Hooks<br/>EXIT 1 = BLOCKED"]
+    L1 -->|"Forced to use MCP"| AI
+
+    AI -->|"Calls MCP tool<br/>spf_read, spf_write..."| L2["📝 Layer 2: MCP Hooks<br/>EXIT 0 = Logged"]
+    L2 --> GATE["🛡️ Rust Gate Pipeline<br/>5-stage security"]
+
+    GATE -->|"After action"| POST["📋 post-action.sh<br/>State + STATUS.txt"]
+    GATE -->|"On failure"| FAIL["⚠️ post-failure.sh<br/>Error logging"]
+
+    style USER fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style CALC fill:#3498DB,stroke:#2980B9,color:#fff
+    style AI fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style L1 fill:#E74C3C,stroke:#C0392B,color:#fff
+    style L2 fill:#F39C12,stroke:#E67E22,color:#fff
+    style GATE fill:#27AE60,stroke:#219A52,color:#fff
+    style POST fill:#1ABC9C,stroke:#16A085,color:#fff
+    style FAIL fill:#E74C3C,stroke:#C0392B,color:#fff
 ```
 
 **Key Design Principle**: Native tools are BLOCKED at Layer 1 (exit 1), forcing all operations through MCP tools. MCP tools are ALLOWED at Layer 2 (exit 0) with audit logging. The actual security enforcement happens in the Rust gate pipeline — hooks add observability and state management.
@@ -419,6 +410,20 @@ The hook system maintains the following state files in `SPFsmartGATE/state/`:
 ---
 
 ## 12.10 HOOK SECURITY MODEL
+
+```mermaid
+graph LR
+    TOOL["Tool Call"] --> H1["Layer 1<br/>Native hooks<br/>EXIT 1 = block"]
+    H1 -->|"Blocked"| REDIRECT["Redirected<br/>to MCP"]
+    REDIRECT --> H2["Layer 2<br/>MCP hooks<br/>EXIT 0 = log"]
+    H2 --> RUST["Layer 3<br/>Rust gate<br/>Final enforcement"]
+
+    style TOOL fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style H1 fill:#E74C3C,stroke:#C0392B,color:#fff
+    style REDIRECT fill:#F39C12,stroke:#E67E22,color:#fff
+    style H2 fill:#3498DB,stroke:#2980B9,color:#fff
+    style RUST fill:#27AE60,stroke:#219A52,color:#fff
+```
 
 ### Permission Separation
 - **Native interceptors** (Layer 1): `755` — world-readable/executable (they only print a message and exit 1)

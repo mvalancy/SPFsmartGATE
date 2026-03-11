@@ -6,6 +6,22 @@
 
 ---
 
+## Build and deploy overview
+
+```mermaid
+graph LR
+    SRC["📦 Source Code"] -->|"cargo build<br/>--release"| BIN["🔧 Binary<br/>5 MB"]
+    BIN -->|"spf-deploy.sh"| CFG["⚙️ Config<br/>settings.json<br/>.claude.json"]
+    CFG -->|"Claude Code<br/>restart"| LIVE["🚀 Live<br/>MCP server running"]
+
+    style SRC fill:#3498DB,stroke:#2980B9,color:#fff
+    style BIN fill:#F39C12,stroke:#E67E22,color:#fff
+    style CFG fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style LIVE fill:#27AE60,stroke:#219A52,color:#fff
+```
+
+---
+
 ## 13.1 BUILD SYSTEM
 
 ### 13.1.1 Cargo.toml — Package Definition
@@ -239,6 +255,26 @@ Key differences from `config.json`:
 
 ## 13.3 LIVE DIRECTORY — DEPLOYMENT LAYOUT
 
+```mermaid
+graph TD
+    LIVE["📂 LIVE/"] --> BIN["BIN/<br/>Compiled binary"]
+    LIVE --> CONFIG["CONFIG/<br/>CONFIG.DB — 10 MB"]
+    LIVE --> SESSION["SESSION/<br/>SESSION.DB — 50 MB"]
+    LIVE --> SPFFS["SPF_FS/<br/>SPF_FS.DB — 4 GB"]
+    LIVE --> PROJECTS["PROJECTS/<br/>PROJECTS.DB — 20 MB<br/>+ device mount"]
+    LIVE --> TMP["TMP/<br/>TMP.DB — 50 MB<br/>+ device mount"]
+    LIVE --> LMDB5["LMDB5/<br/>LMDB5.DB — 100 MB<br/>+ agent home"]
+
+    style LIVE fill:#F39C12,stroke:#E67E22,color:#fff
+    style BIN fill:#E74C3C,stroke:#C0392B,color:#fff
+    style CONFIG fill:#3498DB,stroke:#2980B9,color:#fff
+    style SESSION fill:#3498DB,stroke:#2980B9,color:#fff
+    style SPFFS fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style PROJECTS fill:#27AE60,stroke:#219A52,color:#fff
+    style TMP fill:#27AE60,stroke:#219A52,color:#fff
+    style LMDB5 fill:#1ABC9C,stroke:#16A085,color:#fff
+```
+
 ```
 LIVE/
 ├── BIN/
@@ -351,6 +387,24 @@ LIVE/BIN/spf-smart-gate/spf-smart-gate status
 ---
 
 ## 13.5 BOOT SEQUENCE (Full Chain)
+
+```mermaid
+graph TD
+    START["Claude Code starts"] --> READ["Reads ~/.claude.json<br/>Finds MCP server config"]
+    READ --> SPAWN["Spawns spf-smart-gate serve"]
+    SPAWN --> OPEN["Opens 6 LMDB databases<br/>CONFIG → PROJECTS → TMP → AGENT → FS"]
+    OPEN --> LOOP["Enters stdin JSON-RPC loop"]
+    LOOP --> HOOK["session-start.sh fires<br/>Injects SPF context"]
+    HOOK --> READY["✅ Ready<br/>Native tools blocked<br/>MCP tools tracked<br/>6 LMDBs serving"]
+
+    style START fill:#6C5CE7,stroke:#5A4BD1,color:#fff
+    style READ fill:#3498DB,stroke:#2980B9,color:#fff
+    style SPAWN fill:#3498DB,stroke:#2980B9,color:#fff
+    style OPEN fill:#F39C12,stroke:#E67E22,color:#fff
+    style LOOP fill:#F39C12,stroke:#E67E22,color:#fff
+    style HOOK fill:#1ABC9C,stroke:#16A085,color:#fff
+    style READY fill:#27AE60,stroke:#219A52,color:#fff
+```
 
 When Claude Code starts with SPF configured:
 
