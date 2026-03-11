@@ -26,33 +26,11 @@ If you're using **Claude Opus/Sonnet through Anthropic's API**, you probably don
 
 The MCP protocol is model-agnostic — any AI agent that speaks MCP can call tools on your system. As local and open-source models become more capable, more people are plugging them into the same tool-calling infrastructure. These models don't have the same safety training:
 
-```mermaid
-graph LR
-    subgraph "Low risk — probably don't need a gate"
-        A1["Claude Opus/Sonnet"] --- A2["GPT-4o/o1"]
-        A2 --- A3["Gemini Pro"]
-    end
-
-    subgraph "Medium risk — gate adds real value"
-        B1["Llama 3 70B"] --- B2["Mistral Large"]
-        B2 --- B3["Command R+"]
-    end
-
-    subgraph "High risk — gate strongly recommended"
-        C1["Small local models<br/>0.5B - 7B on device"] --- C2["Uncensored fine-tunes<br/>dolphin, abliterated"]
-        C2 --- C3["Unknown third-party<br/>MCP agents"]
-    end
-
-    style A1 fill:#27AE60,stroke:#219A52,color:#fff
-    style A2 fill:#27AE60,stroke:#219A52,color:#fff
-    style A3 fill:#27AE60,stroke:#219A52,color:#fff
-    style B1 fill:#F39C12,stroke:#E67E22,color:#fff
-    style B2 fill:#F39C12,stroke:#E67E22,color:#fff
-    style B3 fill:#F39C12,stroke:#E67E22,color:#fff
-    style C1 fill:#E74C3C,stroke:#C0392B,color:#fff
-    style C2 fill:#E74C3C,stroke:#C0392B,color:#fff
-    style C3 fill:#E74C3C,stroke:#C0392B,color:#fff
-```
+| Risk level | Models | Do you need a gate? |
+|---|---|---|
+| **Low** | Claude Opus/Sonnet, GPT-4o, Gemini Pro | **Probably not.** Strong safety training. Well-behaved in practice. |
+| **Medium** | Llama 3 70B, Mistral Large, Command R+ | **It helps.** Decent but less tested safety. More likely to make mistakes under complex prompts. |
+| **High** | Small local models (0.5B-7B), uncensored fine-tunes (dolphin, abliterated), unknown third-party MCP agents | **Yes.** Weak or no safety training. Chaotic tool calls. This is what SPFsmartGATE is built for. |
 
 ### Where SPFsmartGATE earns its keep
 
@@ -140,31 +118,17 @@ graph TD
 ## How it fits together
 
 ```mermaid
-graph TB
-    subgraph "Your Computer"
-        subgraph "SPFsmartGATE (the gate)"
-            MCP["📡 MCP Server<br/>Speaks the standard<br/>AI tool protocol"]
-            GATE["🛡️ Security Pipeline<br/>5-stage check on<br/>every action"]
-            DB["💾 6 Databases<br/>Session logs, config,<br/>agent memory"]
-            HOOKS["🪝 31 Hook Scripts<br/>Monitor and log<br/>the full lifecycle"]
-        end
-        CLI["🖥️ Your AI Assistant<br/>(Claude Code, etc.)"]
-        FS["📁 Your Files"]
-        WEB["🌐 Internet"]
-    end
-
-    CLI -->|"Every tool call"| MCP
-    MCP --> GATE
-    GATE -->|"Approved"| FS
-    GATE -->|"Approved"| WEB
-    GATE <--> DB
-    HOOKS -.->|"Observe & log"| GATE
+graph TD
+    CLI["🖥️ Your AI Assistant"] -->|"Every tool call"| MCP["📡 MCP Server"]
+    MCP --> GATE["🛡️ Security Pipeline"]
+    GATE -->|"Approved"| FS["📁 Your Files"]
+    GATE -->|"Approved"| WEB["🌐 Internet"]
+    GATE <-->|"Log and track"| DB["💾 6 Databases"]
 
     style CLI fill:#6C5CE7,stroke:#5A4BD1,color:#fff
     style MCP fill:#3498DB,stroke:#2980B9,color:#fff
     style GATE fill:#F39C12,stroke:#E67E22,color:#fff
     style DB fill:#1ABC9C,stroke:#16A085,color:#fff
-    style HOOKS fill:#9B59B6,stroke:#8E44AD,color:#fff
     style FS fill:#27AE60,stroke:#219A52,color:#fff
     style WEB fill:#E67E22,stroke:#D35400,color:#fff
 ```
