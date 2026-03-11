@@ -40,40 +40,58 @@ When something is blocked, the AI gets a specific error (`BLOCKED | tool | reaso
 
 > **If you have a desktop or laptop with 16GB+ RAM: you probably don't.** Use Docker, a VM, or container sandboxing — it's simpler, more robust, and works with any model. SPFsmartGATE exists for environments where those options aren't available.
 
-### The simpler alternatives you should try first
+### The alternatives — and what they actually cost
 
-If you have a real computer (desktop, laptop, workstation, dev server), you have better options:
+| Approach | RAM overhead | Disk | Startup | Isolation strength |
+|---|---|---|---|---|
+| **Docker sandbox** | 100-200MB | 500MB+ image | 2-5s | Strong — full filesystem/network isolation |
+| **Virtual machine** (QEMU/KVM, VirtualBox) | 512MB-2GB+ | 5-20GB image | 10-30s | Strongest — separate OS and kernel |
+| **Firecracker / microVM** (E2B) | ~128MB | minimal | ~80ms | VM-level at container speed |
+| **Limited Unix user + SPFsmartGATE** | ~20-50MB | 5MB binary | ~200ms | Medium — OS permissions + per-tool-call filtering |
+| **Limited Unix user alone** | ~0 | ~0 | instant | Basic — just filesystem permissions |
+| **Claude Code deny rules + hooks** | ~0 | ~0 | instant | Medium — deterministic tool blocking |
 
-| Approach | What it does | When to use it |
-|---|---|---|
-| **Docker sandbox** | Runs the AI in an isolated container. If it breaks everything inside, your host is untouched. | Any desktop/laptop. Official Claude Code support. The simplest answer. |
-| **Virtual machine** | Full OS isolation. The AI gets its own filesystem, network, and kernel. Even more isolated than Docker. | When you want total isolation, or you're running untrusted models you really don't trust. Heavier but bulletproof. |
-| **Firecracker / microVM** | Lightweight VMs with ~80ms cold start (E2B uses this). VM-level isolation, container-level speed. | Cloud/server deployments, multi-tenant agent hosting. |
-| **Claude Code deny rules + hooks** | Built-in path blocking, tool approval prompts, deterministic shell script hooks. | Already using Claude Code with frontier models. ~60-70% of SPFsmartGATE's security coverage with zero extra software. |
+**If you have 32-128GB RAM, a GPU, and Docker installed — just use Docker.** On a machine with 128GB unified memory or 128GB RAM + 24GB VRAM, Docker's 200MB overhead is invisible. A VM's 2GB overhead is invisible. Use the strongest isolation available and don't think about it.
 
-**If you have 32-128GB RAM, a GPU, and Docker installed — just use Docker.** It's the right tool. SPFsmartGATE is solving a different problem.
+### Where the resource difference actually matters
 
-### Where SPFsmartGATE actually fits
-
-The niche is narrow but real: **Android phones and tablets running local models through MCP.**
+On powerful hardware, resource overhead is irrelevant. But there are two scenarios where SPFsmartGATE's tiny footprint (~20-50MB RAM, 5MB disk, <10ms per gate check) genuinely matters:
 
 ```mermaid
 graph TD
-    Q{"Where are you<br/>running AI agents?"} -->|"Desktop / laptop / server<br/>16GB+ RAM"| DOCKER["Use Docker or a VM<br/>You don't need SPFsmartGATE"]
-    Q -->|"Android phone / tablet<br/>via Termux"| SPF["SPFsmartGATE is<br/>one of your few options"]
-    Q -->|"Very low-RAM SBC<br/>1-2GB Pi, no Docker"| MAYBE["SPFsmartGATE helps<br/>if Docker won't fit"]
+    Q{"Where are you<br/>running AI agents?"} -->|"Desktop / laptop / server<br/>16GB+ RAM"| DOCKER["Use Docker or a VM<br/>Overhead is invisible"]
+    Q -->|"Android phone / tablet<br/>via Termux"| SPF["SPFsmartGATE<br/>Docker doesn't work here"]
+    Q -->|"Resource-tight device<br/>Model uses most of RAM"| LIGHT["Limited user + SPFsmartGATE<br/>Lightweight defense-in-depth"]
 
     style Q fill:#F39C12,stroke:#E67E22,color:#fff
     style DOCKER fill:#3498DB,stroke:#2980B9,color:#fff
     style SPF fill:#27AE60,stroke:#219A52,color:#fff
-    style MAYBE fill:#F39C12,stroke:#E67E22,color:#fff
+    style LIGHT fill:#F39C12,stroke:#E67E22,color:#fff
 ```
 
-- **Android/Termux** — Docker doesn't work reliably here. If you're running Ollama or llama.cpp on your phone with MCP tool access, a compiled security gate is one of the few ways to prevent a 3B model from `rm -rf`-ing your storage. This is the primary use case.
-- **Very low-RAM SBCs** (1-2GB Raspberry Pi) — Docker might not fit alongside the model. A 5MB compiled binary is lighter than a container runtime.
-- **Untrusted MCP agents you want to try** — random agent frameworks from GitHub. The gate lets you give them tool access with guardrails, even on a powerful machine, if you don't want to bother setting up a container for a quick test.
+- **Android/Termux** — Docker doesn't work here. If you're running Ollama or llama.cpp on your phone with MCP tool access, a compiled security gate is one of the few ways to prevent a 3B model from `rm -rf`-ing your storage. This is the primary use case.
 
-**It does NOT matter what model you're running if you can just put it in a container.** A Docker sandbox protects against a misbehaving GPT-4, Llama 70B, or abliterated 3B model equally — by isolating the entire environment. SPFsmartGATE's per-tool-call filtering is a weaker isolation model that only makes sense when containers aren't an option.
+- **Resource-tight devices where the model uses most of RAM** — if you're running a 7B model on a 8GB Raspberry Pi or Jetson Nano, Docker's 200MB overhead is 2.5% of total memory that could go to the model. A limited Unix user account (zero overhead) combined with SPFsmartGATE (20-50MB) gives you defense-in-depth for a fraction of the cost. On a Jetson Orin AGX with 32-64GB, this doesn't matter — just use Docker.
+
+- **Quick-test of untrusted MCP agents** — you found a random agent framework on GitHub and want to try it without setting up a container. A limited user account + SPFsmartGATE lets you gate it in seconds.
+
+### The limited user account approach
+
+Something the other docs don't mention: a **limited Unix user account** is a zero-overhead security layer you can use with or without SPFsmartGATE.
+
+```bash
+# Create a restricted user for the agent
+sudo useradd -m -s /bin/bash agent-sandbox
+# Only give it access to a project directory
+sudo mkdir -p /home/agent-sandbox/workspace
+sudo chown agent-sandbox:agent-sandbox /home/agent-sandbox/workspace
+# Run the agent as that user
+sudo -u agent-sandbox spf-smart-gate serve
+```
+
+The OS prevents the agent from touching files it doesn't own. SPFsmartGATE adds per-tool-call filtering on top (dangerous command detection, credential scanning, rate limiting). Together they cost ~20-50MB total — vs Docker at 200MB+ or a VM at 512MB+.
+
+**This only matters when you're counting megabytes.** On a machine with 32GB+ RAM, Docker is simpler and more robust. Use it.
 
 **Scope limitation:** SPFsmartGATE only gates **MCP tool calls** (JSON-RPC over stdio). If your architecture has the model generate code (Lua, Python) that a separate runtime executes, the gate never sees those actions — you need to sandbox the runtime instead. See [threat model](docs/threat-model.md) for details.
 

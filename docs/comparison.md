@@ -64,6 +64,23 @@ Claude Code's built-in security has gotten strong:
 
 **The main case where sandboxing doesn't work: Android/Termux.** Docker is unreliable there, and VMs aren't practical on a phone. That's the niche where SPFsmartGATE provides value — per-tool-call filtering when you can't isolate the whole environment.
 
+### Resource cost comparison
+
+| Approach | RAM overhead | Disk | Startup | Per-operation |
+|---|---|---|---|---|
+| **SPFsmartGATE** | ~20-50MB | 5MB binary | ~200ms | <10ms gate check |
+| **Limited Unix user** (no gate) | ~0 | ~0 | instant | ~0 |
+| **Limited Unix user + SPFsmartGATE** | ~20-50MB | 5MB | ~200ms | <10ms |
+| **Docker container** | 100-200MB+ | 500MB+ image | 2-5s | negligible |
+| **Virtual machine** | 512MB-2GB+ | 5-20GB | 10-30s | negligible |
+| **Firecracker microVM** | ~128MB | minimal | ~80ms | negligible |
+
+On a machine with 32-128GB RAM, these differences are meaningless — use Docker or a VM. On a device where the model is already using most of available memory (8GB Raspberry Pi running a 7B model, Android phone), the difference between 5MB and 500MB+ for the security layer matters.
+
+### The lightweight combo: limited Unix user + SPFsmartGATE
+
+A limited Unix user account is a zero-overhead security layer that works on any Unix system. The OS prevents the agent from touching files it doesn't own. SPFsmartGATE adds per-tool-call filtering on top (dangerous command patterns, credential scanning, rate limiting, read-before-write). Together: ~20-50MB total overhead, defense-in-depth, no containers required.
+
 ---
 
 ## AI memory frameworks
